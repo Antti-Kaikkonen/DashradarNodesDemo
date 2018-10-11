@@ -1,0 +1,124 @@
+<mat-tab-group dynamicHeight (selectedTabChange)="tabChanged($event)">
+  <mat-tab label="Map">
+    <div id="mapContainer" style="border:1px dotted blue; width: 700px; height: 475px; position: relative;"></div>
+  </mat-tab>
+  <mat-tab label="Versions">
+    <table mat-table [dataSource]="versions">
+      <ng-container matColumnDef="key">
+        <th mat-header-cell *matHeaderCellDef> Version. </th>
+        <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="nodes">
+        <th mat-header-cell *matHeaderCellDef> Nodes </th>
+        <td mat-cell *matCellDef="let element"> {{element[1]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="masternodes">
+          <th mat-header-cell *matHeaderCellDef> Masternodes </th>
+          <td mat-cell *matCellDef="let element"> {{element[2]}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table> 
+  </mat-tab>
+  <mat-tab label="Countries"> 
+    <table mat-table [dataSource]="countries">
+      <ng-container matColumnDef="key">
+        <th mat-header-cell *matHeaderCellDef> Country. </th>
+        <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="nodes">
+        <th mat-header-cell *matHeaderCellDef> Nodes </th>
+        <td mat-cell *matCellDef="let element"> {{element[1]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="masternodes">
+          <th mat-header-cell *matHeaderCellDef> Masternodes </th>
+          <td mat-cell *matCellDef="let element"> {{element[2]}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>       
+  </mat-tab>
+  <mat-tab label="Organizations">
+    <table mat-table [dataSource]="organizations">
+      <ng-container matColumnDef="key">
+        <th mat-header-cell *matHeaderCellDef> Organization. </th>
+        <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="nodes">
+        <th mat-header-cell *matHeaderCellDef> Nodes </th>
+        <td mat-cell *matCellDef="let element"> {{element[1]}} </td>
+      </ng-container>
+      <ng-container matColumnDef="masternodes">
+          <th mat-header-cell *matHeaderCellDef> Masternodes </th>
+          <td mat-cell *matCellDef="let element"> {{element[2]}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>        
+  </mat-tab>
+  <mat-tab label="All nodes">
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select placeholder="Columns" multiple [(value)]="nodeColumns">
+        <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    
+      
+    <table mat-table [dataSource]="nodes" matSort>
+      <ng-container matColumnDef="host">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Ip </th>
+        <td mat-cell *matCellDef="let node"> {{node.host}} </td>
+      </ng-container>
+      <ng-container matColumnDef="port">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Port </th>
+        <td mat-cell *matCellDef="let node"> {{node.port}} </td>
+      </ng-container>
+      <ng-container matColumnDef="uptime2h">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Uptime 2h </th>
+          <td mat-cell *matCellDef="let node"> {{node.uptime2h | percent}} </td>
+      </ng-container>
+      <ng-container matColumnDef="uptime8h">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Uptime 8h </th>
+          <td mat-cell *matCellDef="let node"> {{node.uptime8h | percent}} </td>
+      </ng-container>
+      <ng-container matColumnDef="uptime24h">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Uptime 24h </th>
+          <td mat-cell *matCellDef="let node"> {{node.uptime24h | percent}} </td>
+      </ng-container>
+      <ng-container matColumnDef="uptime7d">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Uptime 7d </th>
+          <td mat-cell *matCellDef="let node"> {{node.uptime7d | percent}} </td>
+      </ng-container>
+      <ng-container matColumnDef="uptime30d">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Uptime 30d </th>
+          <td mat-cell *matCellDef="let node"> {{node.uptime30d | percent}} </td>
+      </ng-container>
+      <ng-container matColumnDef="country">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Country </th>
+          <td mat-cell *matCellDef="let node"> {{node.country}} </td>
+      </ng-container>
+      <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> City </th>
+          <td mat-cell *matCellDef="let node"> {{node.city}} </td>
+      </ng-container>
+      <ng-container matColumnDef="organization">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Organization </th>
+          <td mat-cell *matCellDef="let node"> {{node.organization}} </td>
+      </ng-container>
+      <ng-container matColumnDef="subversion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Version </th>
+          <td mat-cell *matCellDef="let node"> {{node.subversion}} </td>
+      </ng-container>
+      <ng-container matColumnDef="masternode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Masternode </th>
+          <td mat-cell *matCellDef="let node"> {{node.masternode}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="nodeColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: nodeColumns;"></tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[20, 50, 10]" showFirstLastButtons></mat-paginator>
+  </mat-tab>
+  </mat-tab-group>

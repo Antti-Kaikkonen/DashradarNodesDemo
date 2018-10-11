@@ -1,0 +1,199 @@
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator, MatSort, MatTabChangeEvent, MatTableDataSource } from '@angular/material';
+import * as d3 from 'd3/d3.min.js';
+import * as Datamap from 'datamaps/dist/datamaps.world.js';
+import * as countries from 'i18n-iso-countries';
+import * as Papa from 'papaparse';
+
+declare var require: any
+const english_countries = require('i18n-iso-countries/langs/en.json');
+
+countries.registerLocale(english_countries);
+
+@Component({
+  selector: 'app-datamap',
+  templateUrl: './datamap.component.html',
+  styleUrls: ['./datamap.component.css']
+})
+export class DatamapComponent implements OnInit {
+
+  displayedColumns: string[] = ['key', 'nodes', 'masternodes'];
+
+  nodeColumns: string[] = ["host", "port", "subversion", "masternode"];
+
+  availableNodeColumns: Column[] = [{label:"ip", property:"host"}, {label:"port", property:"port"}, {label:"uptime2h", property:"uptime2h"}, {label:"uptime8h", property:"uptime8h"}, 
+  {label:"uptime24h", property:"uptime24h"}, {label:"uptime7d", property:"uptime7d"}, {label:"uptime30d", property:"uptime30d"}, {label:"country", property:"country"}, {label:"city", property:"city"},
+  {label:"organization", property:"organization"}, {label:"version", property:"subversion"}, {label:"masternode", property:"masternode"}];
+
+  organizations = [];  
+  countries = [];
+  versions = [];
+  country2count = {};
+  datamap: Datamap;
+
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatSort) sort: MatSort;
+  dashnodes: DashNode[] = [];
+  nodes = new MatTableDataSource<DashNode>([]);
+
+  constructor(private http: HttpClient) { 
+
+  }
+
+  applyFilter(filterValue: string) {
+    this.nodes.filterPredicate = (dashnode, filter) => this.nodeColumns.some(column => String(dashnode[column]).indexOf(filter) > -1);
+    this.nodes.filter = filterValue.trim().toLowerCase();
+  }
+
+  renderMap() {
+    if (this.datamap !== undefined) return;
+    let container = document.getElementById('mapContainer');
+    if (container === null || container === undefined) return;
+    this.datamap = new Datamap({
+        element: container,
+        projection: 'mercator', // big world map
+        responsive: false,
+        // countries don't listed in dataset will be painted with this color
+        fills: { defaultFill: '#F5F5F5' },
+        data: this.country2count,
+        geographyConfig: {
+            borderColor: '#DEDEDE',
+            highlightBorderWidth: 2,
+            // don't change color on mouse hover
+            highlightFillColor: function(geo) {
+                return geo['fillColor'] || '#F5F5F5';
+            },
+            // only change border
+            highlightBorderColor: '#B7B7B7',
+            // show desired information in tooltip
+            popupTemplate: function(geo, data) {
+                // don't show tooltip if country don't present in dataset
+                if (!data) { return ; }
+                // tooltip content
+                return ['<div class="hoverinfo">',
+                    '<strong>', geo.properties.name, '</strong>',
+                    '<br>Nodes: <strong>', data.numberOfNodes, '</strong>',
+                    '<br>Masternodes: <strong>', data.numberOfMasternodes, '</strong>',
+                    '</div>'].join('');
+            }
+        }
+    });
+  }
+
+  tabChanged(event: MatTabChangeEvent) {
+      if (event.tab.textLabel === "Map") {
+        this.renderMap();
+      }
+  }
+
+  ngOnInit() {
+    this.nodes.paginator = this.paginator;
+    this.nodes.sort = this.sort;
+    this.http.get("https://nodes.dashradar.com/dash.csv", {responseType: 'text'}).subscribe(e => {
+        let parsed = Papa.parse(e);
+        this.nodes.data = parsed.data.map(row => {
+            let res: DashNode = {
+                host: row[0],
+                port: Number(row[1]),
+                uptime2h: Number(row[2].slice(0, -1))/100,
+                uptime8h: Number(row[3].slice(0, -1))/100,
+                uptime24h: Number(row[4].slice(0, -1))/100,
+                uptime7d: Number(row[5].slice(0, -1))/100,
+                uptime30d: Number(row[6].slice(0, -1))/100,
+                country: row[8],
+                city: row[9],
+                latitude: Number(row[10]),
+                longitude: Number(row[11]),
+                organization: row[12],
+                bestHeight: Number(row[13]),
+                version: Number(row[14]),
+                subversion: row[15],
+                masternode: row[16] === "1"
+            };
+            return res;
+        });
+        parsed.data = parsed.data.filter(row => row[2] === "100.00%");
+        //12 = organization, 13 = height, 14=protocol_version, 15=subversion, 16=masternode
+        parsed.data.forEach(row => {
+            let countryCode = countries.getAlpha3Code(row[8], 'en');
+            if (countryCode === undefined) return;
+            if (this.country2count[countryCode] === undefined) {
+                this.country2count[countryCode] = {numberOfNodes: 0,
+                numberOfMasternodes: 0};
+            }
+            this.country2count[countryCode].numberOfNodes++;
+            if (row[16] === "1") this.country2count[countryCode].numberOfMasternodes++;
+        });
+
+        let countryArr = Object.keys(this.country2count).map(country => [countries.getName(country, "en"), this.country2count[country].numberOfNodes, this.country2count[country].numberOfMasternodes]);
+        countryArr.sort((a, b) => b[1]-a[1]);
+        this.countries = countryArr;
+
+        let organization2count = {};
+        parsed.data.forEach(row => {
+            let organization = row[12];
+            if (organization2count[organization] === undefined) {
+                organization2count[organization] = {numberOfNodes: 0, numberOfMasternodes: 0};
+            } 
+            organization2count[organization].numberOfNodes++;
+            if (row[16] === "1") organization2count[organization].numberOfMasternodes++;
+        });
+        let organizationsArr = Object.keys(organization2count).map(organization => [organization, organization2count[organization].numberOfNodes, organization2count[organization].numberOfMasternodes]);
+        organizationsArr.sort((a, b) => b[1]-a[1]);
+        this.organizations = organizationsArr;
+
+        let ua2count = {};
+        parsed.data.forEach(row => {
+            let ua = row[15];
+            if (ua2count[ua] === undefined) {
+                ua2count[ua] = {numberOfNodes: 0, numberOfMasternodes: 0};
+            } 
+            ua2count[ua].numberOfNodes++;
+            if (row[16] === "1") ua2count[ua].numberOfMasternodes++;
+        });
+        let uaArr = Object.keys(ua2count).map(ua => [ua, ua2count[ua].numberOfNodes, ua2count[ua].numberOfMasternodes]);
+        uaArr.sort((a, b) => b[1]-a[1]);
+        this.versions = uaArr;
+
+        let onlyValues = Object.keys(this.country2count).map(iso => this.country2count[iso].numberOfNodes);
+        var minValue = Math.min.apply(null, onlyValues),
+        maxValue = Math.max.apply(null, onlyValues);
+        let paletteScale = d3.scale.linear()
+            .domain([minValue,maxValue])
+            .range(["#EFEFFF","#02386F"]);
+
+        Object.keys(this.country2count).forEach(iso => {
+            this.country2count[iso].fillColor = paletteScale(this.country2count[iso].numberOfNodes);
+        });
+        this.renderMap()
+    });
+
+  }
+
+}
+
+interface Column {
+    label: string,
+    property: string
+}
+
+
+interface DashNode {
+  host: string;
+  port: number;
+  uptime2h: number;
+  uptime8h: number;
+  uptime24h: number;
+  uptime7d: number;
+  uptime30d: number;
+  country: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  organization: string;
+  bestHeight: number;
+  version: number;
+  subversion: string;
+  masternode: boolean;
+}  
