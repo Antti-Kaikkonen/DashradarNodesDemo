@@ -116,7 +116,7 @@ export class DatamapComponent implements OnInit {
     this.nodes.sort = this.sort;
     this.http.get("https://nodes.dashradar.com/dash.csv", {responseType: 'text'}).subscribe(e => {
         let parsed = Papa.parse(e);
-        this.nodes.data = parsed.data.map(row => {
+        this.dashnodes = parsed.data.map(row => {
             let res: DashNode = {
                 host: row[0],
                 port: Number(row[1]),
@@ -137,44 +137,49 @@ export class DatamapComponent implements OnInit {
             };
             return res;
         });
-        parsed.data = parsed.data.filter(row => row[2] === "100.00%");
-        //12 = organization, 13 = height, 14=protocol_version, 15=subversion, 16=masternode
-        parsed.data.forEach(row => {
-            let countryCode = countries.getAlpha3Code(row[8], 'en');
+        this.nodes.data = this.dashnodes;
+
+        let activeNodes = this.dashnodes.filter(node => node.uptime2h === 1);
+        activeNodes.forEach(node => {
+            let countryCode = countries.getAlpha3Code(node.country, 'en');
             if (countryCode === undefined) return;
             if (this.country2count[countryCode] === undefined) {
                 this.country2count[countryCode] = {numberOfNodes: 0,
                 numberOfMasternodes: 0};
             }
             this.country2count[countryCode].numberOfNodes++;
-            if (row[16] === "1") this.country2count[countryCode].numberOfMasternodes++;
+            if (node.masternode) this.country2count[countryCode].numberOfMasternodes++;
         });
 
-        let countryArr = Object.keys(this.country2count).map(country => [countries.getName(country, "en"), this.country2count[country].numberOfNodes, this.country2count[country].numberOfMasternodes, countries.alpha3ToAlpha2(country).toLowerCase()]);
+        let countryArr = Object.keys(this.country2count)
+        .map(country => [
+            countries.getName(country, "en"), this.country2count[country].numberOfNodes, 
+            this.country2count[country].numberOfMasternodes, countries.alpha3ToAlpha2(country).toLowerCase()
+        ]);
         countryArr.sort((a, b) => b[1]-a[1]);
         this.countries = countryArr;
 
         let organization2count = {};
-        parsed.data.forEach(row => {
-            let organization = row[12];
+        activeNodes.forEach(node => {
+            let organization = node.organization;
             if (organization2count[organization] === undefined) {
                 organization2count[organization] = {numberOfNodes: 0, numberOfMasternodes: 0};
             } 
             organization2count[organization].numberOfNodes++;
-            if (row[16] === "1") organization2count[organization].numberOfMasternodes++;
+            if (node.masternode) organization2count[organization].numberOfMasternodes++;
         });
         let organizationsArr = Object.keys(organization2count).map(organization => [organization, organization2count[organization].numberOfNodes, organization2count[organization].numberOfMasternodes]);
         organizationsArr.sort((a, b) => b[1]-a[1]);
         this.organizations = organizationsArr;
 
         let ua2count = {};
-        parsed.data.forEach(row => {
-            let ua = row[15];
+        activeNodes.forEach(node => {
+            let ua = node.subversion;
             if (ua2count[ua] === undefined) {
                 ua2count[ua] = {numberOfNodes: 0, numberOfMasternodes: 0};
             } 
             ua2count[ua].numberOfNodes++;
-            if (row[16] === "1") ua2count[ua].numberOfMasternodes++;
+            if (node.masternode) ua2count[ua].numberOfMasternodes++;
         });
         let uaArr = Object.keys(ua2count).map(ua => [ua, ua2count[ua].numberOfNodes, ua2count[ua].numberOfMasternodes]);
         uaArr.sort((a, b) => b[1]-a[1]);

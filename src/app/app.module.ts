@@ -6,6 +6,7 @@ import {
   MatIconModule,
   MatInputModule,
   MatPaginatorModule,
+  MatProgressSpinnerModule,
   MatSelectModule,
   MatSortModule,
   MatTableModule,
@@ -34,7 +35,8 @@ import { DatamapComponent } from './datamap/datamap.component';
     MatInputModule,
     MatSelectModule,
     MatIconModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    MatProgressSpinnerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

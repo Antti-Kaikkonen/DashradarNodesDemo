@@ -1,9 +1,11 @@
 <mat-tab-group dynamicHeight (selectedTabChange)="tabChanged($event)">
   <mat-tab label="Map">
-    <div id="mapContainer" style="border:1px dotted blue; width: 700px; height: 475px; position: relative;"></div>
+    <mat-spinner *ngIf="versions.length === 0" style="margin: 0 auto"></mat-spinner>
+    <div id="mapContainer" style="border:1px dotted blue; width: 700px; height: 475px; position: relative;" *ngIf="versions.length > 0"></div>
   </mat-tab>
   <mat-tab label="Versions">
-    <table mat-table [dataSource]="versions">
+    <mat-spinner *ngIf="versions.length === 0" style="margin: 0 auto"></mat-spinner>
+    <table mat-table [dataSource]="versions" *ngIf="versions.length > 0">
       <ng-container matColumnDef="key">
         <th mat-header-cell *matHeaderCellDef> Version. </th>
         <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
@@ -21,7 +23,8 @@
     </table> 
   </mat-tab>
   <mat-tab label="Countries"> 
-    <table mat-table [dataSource]="countries">
+    <mat-spinner *ngIf="countries.length === 0" style="margin: 0 auto"></mat-spinner>
+    <table mat-table [dataSource]="countries" *ngIf="countries.length > 0">
       <ng-container matColumnDef="key">
         <th mat-header-cell *matHeaderCellDef> Country </th>
         <td mat-cell *matCellDef="let element"> <span class="flag-icon flag-icon-{{element[3]}}"></span> {{element[0]}}</td>
@@ -39,7 +42,8 @@
     </table>       
   </mat-tab>
   <mat-tab label="Organizations">
-    <table mat-table [dataSource]="organizations">
+    <mat-spinner *ngIf="organizations.length === 0" style="margin: 0 auto"></mat-spinner>
+    <table mat-table [dataSource]="organizations" *ngIf="organizations.length > 0">
       <ng-container matColumnDef="key">
         <th mat-header-cell *matHeaderCellDef> Organization. </th>
         <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
@@ -72,8 +76,8 @@
         <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>
       </mat-select>
     </mat-form-field>
-      
-    <table mat-table [dataSource]="nodes" matSort>
+    <mat-spinner *ngIf="nodes.data.length === 0" style="margin: 0 auto"></mat-spinner>
+    <table mat-table [dataSource]="nodes" matSort [hidden]="nodes.data.length === 0">
       <ng-container matColumnDef="host">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Ip </th>
         <td mat-cell *matCellDef="let node"> {{node.host}} </td>
