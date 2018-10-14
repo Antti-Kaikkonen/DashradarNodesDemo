@@ -1,7 +1,7 @@
 <mat-tab-group dynamicHeight (selectedTabChange)="tabChanged($event)">
   <mat-tab label="Map">
     <mat-spinner *ngIf="versions.length === 0" style="margin: 0 auto"></mat-spinner>
-    <div id="mapContainer" style="border:1px dotted blue; width: 700px; height: 475px; position: relative;" *ngIf="versions.length > 0"></div>
+    <div id="mapContainer" style="width: 700px; height: 475px; position: relative;"></div>
   </mat-tab>
   <mat-tab label="Versions">
     <mat-spinner *ngIf="versions.length === 0" style="margin: 0 auto"></mat-spinner>
@@ -66,11 +66,10 @@
       <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
     </mat-form-field>
     <mat-button-toggle-group [(value)]="ismn" (change)="applyMnFilter($event)">
-      <mat-button-toggle value="any">Any</mat-button-toggle>
-      <mat-button-toggle value="mn">Mn only</mat-button-toggle>
-      <mat-button-toggle value="non mn">Non mn only</mat-button-toggle>
+      <mat-button-toggle value="any">All</mat-button-toggle>
+      <mat-button-toggle value="mn">Masternodes</mat-button-toggle>
+      <mat-button-toggle value="non mn">Non masternodes</mat-button-toggle>
     </mat-button-toggle-group>
-    {{ismn}}
     <mat-form-field>
       <mat-select placeholder="Columns" multiple [(value)]="nodeColumns">
         <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>

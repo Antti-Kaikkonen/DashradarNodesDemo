@@ -195,7 +195,7 @@ export class DatamapComponent implements OnInit {
         Object.keys(this.country2count).forEach(iso => {
             this.country2count[iso].fillColor = paletteScale(this.country2count[iso].numberOfNodes);
         });
-        this.renderMap()
+        this.renderMap();
     });
 
   }
