@@ -23,8 +23,8 @@
   <mat-tab label="Countries"> 
     <table mat-table [dataSource]="countries">
       <ng-container matColumnDef="key">
-        <th mat-header-cell *matHeaderCellDef> Country. </th>
-        <td mat-cell *matCellDef="let element"> {{element[0]}} </td>
+        <th mat-header-cell *matHeaderCellDef> Country </th>
+        <td mat-cell *matCellDef="let element"> <span class="flag-icon flag-icon-{{element[3]}}"></span> {{element[0]}}</td>
       </ng-container>
       <ng-container matColumnDef="nodes">
         <th mat-header-cell *matHeaderCellDef> Nodes </th>
@@ -57,15 +57,21 @@
     </table>        
   </mat-tab>
   <mat-tab label="All nodes">
+    <mat-icon>filter_list</mat-icon>
     <mat-form-field>
       <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
     </mat-form-field>
+    <mat-button-toggle-group [(value)]="ismn" (change)="applyMnFilter($event)">
+      <mat-button-toggle value="any">Any</mat-button-toggle>
+      <mat-button-toggle value="mn">Mn only</mat-button-toggle>
+      <mat-button-toggle value="non mn">Non mn only</mat-button-toggle>
+    </mat-button-toggle-group>
+    {{ismn}}
     <mat-form-field>
       <mat-select placeholder="Columns" multiple [(value)]="nodeColumns">
         <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>
       </mat-select>
     </mat-form-field>
-    
       
     <table mat-table [dataSource]="nodes" matSort>
       <ng-container matColumnDef="host">
@@ -114,7 +120,7 @@
       </ng-container>
       <ng-container matColumnDef="masternode">
           <th mat-header-cell *matHeaderCellDef mat-sort-header> Masternode </th>
-          <td mat-cell *matCellDef="let node"> {{node.masternode}} </td>
+          <td mat-cell *matCellDef="let node"> <mat-icon *ngIf="node.masternode">check</mat-icon></td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="nodeColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: nodeColumns;"></tr>

@@ -1,3 +1,4 @@
+import { formatPercent } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, MatSort, MatTabChangeEvent, MatTableDataSource } from '@angular/material';
@@ -5,6 +6,7 @@ import * as d3 from 'd3/d3.min.js';
 import * as Datamap from 'datamaps/dist/datamaps.world.js';
 import * as countries from 'i18n-iso-countries';
 import * as Papa from 'papaparse';
+
 
 declare var require: any
 const english_countries = require('i18n-iso-countries/langs/en.json');
@@ -20,7 +22,7 @@ export class DatamapComponent implements OnInit {
 
   displayedColumns: string[] = ['key', 'nodes', 'masternodes'];
 
-  nodeColumns: string[] = ["host", "port", "subversion", "masternode"];
+  nodeColumns: string[] = ["host", "port", "uptime2h", "subversion", "masternode"];
 
   availableNodeColumns: Column[] = [{label:"ip", property:"host"}, {label:"port", property:"port"}, {label:"uptime2h", property:"uptime2h"}, {label:"uptime8h", property:"uptime8h"}, 
   {label:"uptime24h", property:"uptime24h"}, {label:"uptime7d", property:"uptime7d"}, {label:"uptime30d", property:"uptime30d"}, {label:"country", property:"country"}, {label:"city", property:"city"},
@@ -31,19 +33,40 @@ export class DatamapComponent implements OnInit {
   versions = [];
   country2count = {};
   datamap: Datamap;
+  ismn: "any" | "mn" | "non mn" = "any";
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   dashnodes: DashNode[] = [];
   nodes = new MatTableDataSource<DashNode>([]);
-
   constructor(private http: HttpClient) { 
 
   }
 
+  applyMnFilter(event) {
+    console.log("applymnfilter",event.value);
+    this.ismn = event.value;
+    this.applyFilter(this.nodes.filter);
+  }
+
+  column2String(dashnode: DashNode, column: string) {
+    if (column.startsWith("uptime")) {
+        return formatPercent(dashnode[column], "en-US");
+    } else {
+        return String(dashnode[column]).toLowerCase();
+    }
+  }
+
   applyFilter(filterValue: string) {
-    this.nodes.filterPredicate = (dashnode, filter) => this.nodeColumns.some(column => String(dashnode[column]).indexOf(filter) > -1);
-    this.nodes.filter = filterValue.trim().toLowerCase();
+    this.nodes.filterPredicate = (dashnode, filter) => {
+        if (this.ismn === "mn" && dashnode.masternode === false) return false;
+        if (this.ismn === "non mn" && dashnode.masternode === true) return false;
+        if (filter === "$empty$") return true;
+        return this.nodeColumns.some(column => this.column2String(dashnode, column).indexOf(filter) > -1);
+    };    
+    let filter = filterValue;
+    if (filter === "") filter = "$empty$";
+    this.nodes.filter = filter.trim().toLowerCase();
   }
 
   renderMap() {
@@ -88,6 +111,7 @@ export class DatamapComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.applyFilter("");
     this.nodes.paginator = this.paginator;
     this.nodes.sort = this.sort;
     this.http.get("https://nodes.dashradar.com/dash.csv", {responseType: 'text'}).subscribe(e => {
@@ -126,7 +150,7 @@ export class DatamapComponent implements OnInit {
             if (row[16] === "1") this.country2count[countryCode].numberOfMasternodes++;
         });
 
-        let countryArr = Object.keys(this.country2count).map(country => [countries.getName(country, "en"), this.country2count[country].numberOfNodes, this.country2count[country].numberOfMasternodes]);
+        let countryArr = Object.keys(this.country2count).map(country => [countries.getName(country, "en"), this.country2count[country].numberOfNodes, this.country2count[country].numberOfMasternodes, countries.alpha3ToAlpha2(country).toLowerCase()]);
         countryArr.sort((a, b) => b[1]-a[1]);
         this.countries = countryArr;
 

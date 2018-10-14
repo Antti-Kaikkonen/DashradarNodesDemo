@@ -1,7 +1,9 @@
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import {
+  MatButtonToggleModule,
   MatFormFieldModule,
+  MatIconModule,
   MatInputModule,
   MatPaginatorModule,
   MatSelectModule,
@@ -30,7 +32,9 @@ import { DatamapComponent } from './datamap/datamap.component';
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatIconModule,
+    MatButtonToggleModule
   ],
   providers: [],
   bootstrap: [AppComponent]
