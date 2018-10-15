@@ -33,7 +33,8 @@ export class DatamapComponent implements OnInit {
   versions = [];
   country2count = {};
   datamap: Datamap;
-  ismn: "any" | "mn" | "non mn" = "any";
+  mnoptions = ["All nodes", "Masternodes", "Non masternodes"];
+  ismn = this.mnoptions[0];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -44,8 +45,8 @@ export class DatamapComponent implements OnInit {
   }
 
   applyMnFilter(event) {
-    console.log("applymnfilter",event.value);
-    this.ismn = event.value;
+    console.log("applymnfilter",event);
+    this.ismn = event;
     this.applyFilter(this.nodes.filter);
   }
 
@@ -59,8 +60,8 @@ export class DatamapComponent implements OnInit {
 
   applyFilter(filterValue: string) {
     this.nodes.filterPredicate = (dashnode, filter) => {
-        if (this.ismn === "mn" && dashnode.masternode === false) return false;
-        if (this.ismn === "non mn" && dashnode.masternode === true) return false;
+        if (this.ismn === "Masternodes" && dashnode.masternode === false) return false;
+        if (this.ismn === "Non masternodes" && dashnode.masternode === true) return false;
         if (filter === "$empty$") return true;
         return this.nodeColumns.some(column => this.column2String(dashnode, column).indexOf(filter) > -1);
     };    

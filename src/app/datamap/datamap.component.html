@@ -61,20 +61,20 @@
     </table>        
   </mat-tab>
   <mat-tab label="All nodes">
-    <mat-icon>filter_list</mat-icon>
-    <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-    </mat-form-field>
-    <mat-button-toggle-group [(value)]="ismn" (change)="applyMnFilter($event)">
-      <mat-button-toggle value="any">All</mat-button-toggle>
-      <mat-button-toggle value="mn">Masternodes</mat-button-toggle>
-      <mat-button-toggle value="non mn">Non masternodes</mat-button-toggle>
-    </mat-button-toggle-group>
-    <mat-form-field>
-      <mat-select placeholder="Columns" multiple [(value)]="nodeColumns">
-        <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+    <mat-toolbar>
+      <mat-toolbar-row>
+        <mat-icon>filter_list</mat-icon>
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter" style="width: 40%; max-width: 300px; border-bottom: 1px solid grey; margin: 0 10px">
+        <button mat-flat-button [matMenuTriggerFor]="menu">{{ismn}}<mat-icon>arrow_drop_down</mat-icon></button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item *ngFor="let mnoption of mnoptions" (click)="applyMnFilter(mnoption)">{{mnoption}}</button>
+        </mat-menu>
+        <div style="flex: 1 1 auto;"></div>
+        <mat-select placeholder="Columns" multiple [(value)]="nodeColumns" style="width: 200px;" focused>
+          <mat-option *ngFor="let availableColumn of availableNodeColumns" [value]="availableColumn.property">{{availableColumn.label}}</mat-option>
+        </mat-select>
+      </mat-toolbar-row>
+    </mat-toolbar>
     <mat-spinner *ngIf="nodes.data.length === 0" style="margin: 0 auto"></mat-spinner>
     <table mat-table [dataSource]="nodes" matSort [hidden]="nodes.data.length === 0">
       <ng-container matColumnDef="host">
